@@ -3,8 +3,6 @@ services:
     name: meuprojetophp
     env: docker
     plan: free
-    buildCommand: ""
-    startCommand: "php -S 0.0.0.0:10000 -t ."
     autoDeploy: true
     envVars:
       - key: DATABASE_URL
