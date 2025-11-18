@@ -3,7 +3,7 @@ $host = "dpg-d4d5scal19vc73cbpd50-a.oregon-postgres.render.com";
 $port = "5432";
 $dbname = "meuprojetodb";
 $user = "meuprojetodb_user";
-$password = "ARG3AoSXIauNk3IEnsEeaMd4hJvZEOpsz";
+$password = "ARG3AoSXIauNk31ENsEeaMd4hJVZE0pz"; // mesmo do index.php
 
 try {
     $conn = new PDO(
