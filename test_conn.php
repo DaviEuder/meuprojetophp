@@ -4,7 +4,7 @@ $db   = "meuprojetodb";
 $user = "meuprojetodb_user";
 $pass = "ARG3AoSXIauNk31ENsEeaMd4hJVZE0pz";
 
-$dsn = "pgsql:host=$host;port=5432;dbname=$db;sslmode=require";
+$dsn = "pgsql:host=$host;port=5432;dbname=$db;sslmode=verify-full";
 
 try {
     $pdo = new PDO($dsn, $user, $pass, [
