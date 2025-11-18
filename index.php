@@ -5,8 +5,8 @@ $user = 'meuprojetodb_user';
 $pass = 'ARG3AoSXIauNk31ENsEeaMd4hJVZE0pz';
 $port = '5432';
 
-
-$dsn = "pgsql:host=$host;port=$port;dbname=$db;sslmode=verify-full;sslrootcert=system";
+// DSN com SSL obrigatório, sem validação extra
+$dsn = "pgsql:host=$host;port=$port;dbname=$db;sslmode=require";
 
 try {
     $pdo = new PDO($dsn, $user, $pass, [
@@ -34,7 +34,6 @@ try {
         }
     }
 
-  
     $stmt = $pdo->query("SELECT * FROM registros_partida ORDER BY pontos DESC");
     echo "<h2>📊 Ranking de jogadores</h2>
           <table border='1' cellpadding='5'>
