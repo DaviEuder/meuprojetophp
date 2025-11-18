@@ -6,7 +6,7 @@ $pass = 'ARG3AoSXIauNk31ENsEeaMd4hJVZE0pz';
 $port = '5432';
 
 // DSN com SSL obrigatório (sem sslrootcert, usando bundle padrão do container)
-$dsn = "pgsql:host=$host;port=$port;dbname=$db;sslmode=require";
+$dsn = "pgsql:host=$host;port=$port;dbname=$db;sslmode=verify-full";
 
 try {
     $pdo = new PDO($dsn, $user, $pass, [
@@ -59,3 +59,4 @@ try {
     echo "Erro ao conectar ou consultar o banco: " . $e->getMessage();
 }
 ?>
+
