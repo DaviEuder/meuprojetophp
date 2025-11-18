@@ -1,17 +1,12 @@
 <?php
-
-// index.php - Código PHP de Conexão com Debugging
-
-// ----------------------------------------------------
-// CONEXÃO COM O BANCO DE DADOS (USANDO A VARIAVEL DE AMBIENTE DO RENDER)
-// ----------------------------------------------------
+// index.php - Código PHP de Conexão e Exibição do Placar
 
 date_default_timezone_set('America/Sao_Paulo');
 
 $databaseUrl = getenv("DATABASE_URL");
 $db = null;
 
-// 1. Verifica se a variável de ambiente existe (O problema original!)
+// Verifica a variável de ambiente (Resolve o erro principal do Render)
 if (!$databaseUrl) {
     die("
         <h1>Erro Crítico de Configuração!</h1>
@@ -20,64 +15,61 @@ if (!$databaseUrl) {
     ");
 }
 
-// 2. Adapta a URL do PostgreSQL para o formato DSN do PDO (pgsql:...)
-// Render usa 'postgres://', PHP PDO espera 'pgsql:'
+// Adapta a URL do PostgreSQL para o formato DSN do PDO (pgsql:...)
 $dsn = str_replace('postgres://', 'pgsql:', $databaseUrl);
 
-// 3. Tenta estabelecer a conexão
 try {
-    // Cria a conexão PDO
+    // Tenta estabelecer a conexão
     $db = new PDO($dsn);
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // ----------------------------------------------------
-    // LÓGICA DO SEU APP: CRIAR TABELA E EXIBIR PLACAR
-    // ----------------------------------------------------
-
-    // Criar tabela se não existir
+    // CRIAÇÃO DA TABELA (Com a estrutura CORRETA: registros_partida)
     $db->exec("
-        CREATE TABLE IF NOT EXISTS placar (
-            id SERIAL PRIMARY KEY,
-            nome VARCHAR(50) NOT NULL,
-            pontuacao INT NOT NULL DEFAULT 0,
-            criado_em TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        CREATE TABLE IF NOT EXISTS registros_partida (
+            id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+            nome_jogador VARCHAR(100) NOT NULL,
+            pontos INTEGER DEFAULT 0,
+            data_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     ");
 
-    // Inserir uma pontuação fictícia para teste
+    // LÓGICA DO SEU APP: INSERIR DADOS (APENAS PARA TESTE) E EXIBIR
+
+    // Exemplo: Inserir uma pontuação fictícia para teste na tabela correta
     $nome = "Teste_" . substr(md5(mt_rand()), 0, 5);
     $pontuacao = mt_rand(100, 1000);
-    $stmt = $db->prepare("INSERT INTO placar (nome, pontuacao) VALUES (:nome, :pontuacao)");
+    $stmt = $db->prepare("INSERT INTO registros_partida (nome_jogador, pontos) VALUES (:nome, :pontuacao)");
     $stmt->execute([':nome' => $nome, ':pontuacao' => $pontuacao]);
 
 
-    // Buscar e exibir o placar
-    $placar = $db->query("SELECT nome, pontuacao FROM placar ORDER BY pontuacao DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
+    // Buscar e exibir o placar (Usando as colunas corretas)
+    $placar = $db->query("SELECT nome_jogador, pontos FROM registros_partida ORDER BY pontos DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
 
     echo "
         <h1>Conexão com o Banco de Dados OK!</h1>
-        <p>Tudo configurado! O Blueprint vinculou o DB, o Docker instalou o <code>pdo_pgsql</code>, e o PHP conectou.</p>
+        <p>O serviço web está conectado à tabela <code>registros_partida</code>.</p>
         <h2>Placar (Exemplo)</h2>
         <table border='1' cellpadding='10'>
-            <tr><th>Nome</th><th>Pontuação</th></tr>
+            <tr><th>Nome do Jogador</th><th>Pontuação</th></tr>
     ";
 
     foreach ($placar as $registro) {
-        echo "<tr><td>" . htmlspecialchars($registro['nome']) . "</td><td>" . htmlspecialchars($registro['pontuacao']) . "</td></tr>";
+        // Exibe os dados usando as chaves corretas do banco: nome_jogador e pontos
+        echo "<tr><td>" . htmlspecialchars($registro['nome_jogador']) . "</td><td>" . htmlspecialchars($registro['pontos']) . "</td></tr>";
     }
 
     echo "</table>";
 
 
 } catch (PDOException $e) {
-    // 4. Captura e exibe erros de conexão ou SQL
+    // Captura e exibe erros de conexão ou SQL
     die("
         <h1>Erro de Conexão com o Banco de Dados!</h1>
-        <p>O <code>DATABASE_URL</code> foi encontrado, mas a conexão falhou. Isso pode ser erro de senha/usuário/firewall.</p>
+        <p>O <code>DATABASE_URL</code> foi encontrado, mas a conexão falhou.</p>
         <p><strong>Erro:</strong> " . $e->getMessage() . "</p>
+        <p>Verifique o status do seu serviço de banco de dados no Render.</p>
     ");
 }
 
 $db = null;
-
 ?>
