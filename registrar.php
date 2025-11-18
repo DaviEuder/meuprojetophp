@@ -1,13 +1,13 @@
 <?php
-$host = "dpg-d4d5scali9vc73cbpd50-a";
+$host = "dpg-d4d5scal19vc73cbpd50-a.oregon-postgres.render.com";
 $port = "5432";
 $dbname = "meuprojetodb";
 $user = "meuprojetodb_user";
-$password = "ARG3AoSXIauNK3IEnsEeaMd4hJvZEOpsz";
+$password = "ARG3AoSXIauNk3IEnsEeaMd4hJvZEOpsz";
 
 try {
     $conn = new PDO(
-        "pgsql:host=$host;port=$port;dbname=$dbname",
+        "pgsql:host=$host;port=$port;dbname=$dbname;sslmode=require",
         $user,
         $password
     );
@@ -35,5 +35,3 @@ try {
 } catch (PDOException $e) {
     echo "Erro ao inserir no banco: " . $e->getMessage();
 }
-
-
