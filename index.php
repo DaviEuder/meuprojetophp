@@ -5,12 +5,12 @@ $user = "meuprojetodb_user";
 $pass = "ARG3AoSXIauNk31ENsEeaMd4hJVZE0pz";
 $port = "5432";
 
-$connString = "host=$host port=$port dbname=$db user=$user password=$pass sslmode=verify-full sslrootcert=system";
+$connString = "host=$host port=$port dbname=$db user=$user password=$pass sslmode=verify-full sslrootcert=/etc/ssl/certs/ca-certificates.crt";
 $conn = pg_connect($connString);
 
 if ($conn) {
-    echo "<h1>🏀 Conexão estabelecida com PostgreSQL 18 (Opção A)!</h1>";
+    echo "<h1>🏀 Conexão estabelecida com PostgreSQL 18 (Opção B)!</h1>";
 } else {
-    echo "❌ Erro ao conectar (Opção A).";
+    echo "❌ Erro ao conectar (Opção B).";
 }
 ?>
