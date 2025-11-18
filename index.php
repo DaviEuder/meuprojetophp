@@ -1,75 +1,85 @@
 <?php
+// ... (Código de CONEXÃO do Passo 1 deve vir aqui) ...
 
-// Tenta obter a variável DATABASE_URL do ambiente
-$databaseUrl = getenv("DATABASE_URL");
-
-if (!$databaseUrl) {
-    die("<h1>❌ Variável DATABASE_URL não encontrada</h1>");
-}
-
-// Converte postgres:// para pgsql:
-$dsn = str_replace("postgres://", "pgsql:", $databaseUrl);
-
+// O bloco try/catch da conexão deve ser mantido
 try {
-    $pdo = new PDO($dsn, null, null, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
-} catch (PDOException $e) {
-    die("<h1>❌ Erro ao conectar ao banco</h1><pre>" . $e->getMessage() . "</pre>");
+     $pdo = new PDO($dsn, $user, $pass, $options);
+} catch (\PDOException $e) {
+     die("Não foi possível conectar ao banco de dados para exibir o placar."); 
 }
 
-echo "<h1>🏀 Projeto da cesta de basquete está no ar!</h1>";
+// ----------------------------------------------------------------------
 
-// --- Registrar jogador ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $nome = trim($_POST['nome'] ?? '');
-    $pontos = (int)($_POST['pontos'] ?? 0);
-
-    if ($nome === '' || $pontos < 0) {
-        echo "❌ Dados inválidos.<br>";
-    } else {
-        $stmt = $pdo->prepare("
-            INSERT INTO registros_partida (nome_jogador, pontos)
-            VALUES (:nome, :pontos)
-        ");
-        $stmt->execute([':nome' => $nome, ':pontos' => $pontos]);
-
-        echo "✅ Dados registrados com sucesso!<br>";
-    }
-}
-
-// --- Formulário ---
+// CONSULTA SQL: Seleciona nome e pontos, ordenando pela maior pontuação.
+$stmt = $pdo->query('SELECT nome_jogador, pontos FROM registros_partida ORDER BY pontos DESC');
+$pontuacoes = $stmt->fetchAll();
 ?>
-<h2>Registrar jogador</h2>
-<form method="POST">
-    <input name="nome" placeholder="Nome do jogador" required>
-    <input name="pontos" type="number" placeholder="Pontos" min="0" required>
-    <button type="submit">Registrar</button>
-</form>
 
-<h2>📊 Ranking de jogadores</h2>
-<table border="1" cellpadding="5">
-<tr><th>Posição</th><th>Jogador</th><th>Pontos</th><th>Data</th></tr>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placar de Basquete - Trabalho Escolar</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f9; }
+        h1 { color: #0056b3; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
+        table { 
+            width: 80%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            background-color: white;
+        }
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 15px; 
+            text-align: left; 
+        }
+        th { 
+            background-color: #007bff; 
+            color: white; 
+            font-weight: bold;
+        }
+        tr:nth-child(even) { 
+            background-color: #f1f1f1; 
+        }
+        tr:hover {
+            background-color: #e9e9e9;
+        }
+        .vazio { color: #777; font-style: italic; padding: 15px; background-color: #fff; border-radius: 5px; }
+    </style>
+</head>
+<body>
 
-<?php
-$stmt = $pdo->query("
-    SELECT nome_jogador, pontos, data_registro
-    FROM registros_partida
-    ORDER BY pontos DESC, data_registro ASC
-");
+    <h1>🏀 Placar da Partida de Basquete</h1>
 
-$posicao = 1;
+    <?php if (count($pontuacoes) > 0): ?>
+        <table>
+            <thead>
+                <tr>
+                    <th>Posição</th>
+                    <th>Nome do Jogador</th>
+                    <th>Pontuação</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php 
+                $posicao = 1;
+                foreach ($pontuacoes as $linha): 
+                ?>
+                    <tr>
+                        <td><?php echo $posicao++; ?></td>
+                        <td><?php echo htmlspecialchars($linha['nome_jogador']); ?></td>
+                        <td><strong><?php echo htmlspecialchars($linha['pontos']); ?></strong></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php else: ?>
+        <p class="vazio">Ainda não há pontuações registradas no banco de dados.</p>
+    <?php endif; ?>
 
-while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    echo "<tr>
-            <td>{$posicao}</td>
-            <td>" . htmlspecialchars($row['nome_jogador']) . "</td>
-            <td>" . htmlspecialchars($row['pontos']) . "</td>
-            <td>" . htmlspecialchars($row['data_registro']) . "</td>
-         </tr>";
-    $posicao++;
-}
-?>
-</table>
-
+</body>
+</html>
