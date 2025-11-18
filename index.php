@@ -1,9 +1,9 @@
 <?php
 // Configurações do banco (Render)
-$host = "dpg-d4d5scal19vc73cbpd50-a.oregon-postgres.render.com";
+$host = "dpg-d4d5scali9vc73cbpd50-a.oregon-postgres.render.com";
 $db   = "meuprojetodb";
 $user = "meuprojetodb_user";
-$pass = "ARG3AoSXIauNk31ENsEeaMd4hJVZE0pz";
+$pass = "ARG3AoSXIauNk3lENsEeaMd4hJVZEOpz";
 $port = 5432;
 
 // Conexão segura (Render exige sslmode=require)
@@ -17,7 +17,7 @@ try {
     die("<h1>❌ Erro ao conectar ao banco</h1><pre>" . $e->getMessage() . "</pre>");
 }
 
-// Se chegou aqui, conectou ✔
+// Se conectou, mostra mensagem
 echo "<h1>🏀 Projeto da cesta de basquete está no ar!</h1>";
 
 // --- Registrar jogador ---
