@@ -1,15 +1,16 @@
 FROM php:8.2-cli
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     openssl \
     ca-certificates \
     && docker-php-ext-configure pdo_pgsql \
-    && docker-php-ext-install pdo pdo_pgsql
+    && docker-php-ext-install pdo pdo_pgsql \
+    && echo "force-rebuild-v2"
 
 WORKDIR /app
 COPY . .
 
 CMD ["php", "-S", "0.0.0.0:10000", "-t", "."]
 
-# force rebuild
+# end
