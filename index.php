@@ -5,12 +5,50 @@ $user = "meuprojetodb_user";
 $pass = "ARG3AoSXIauNk31ENsEeaMd4hJVZE0pz";
 $port = "5432";
 
-$connString = "host=$host port=$port dbname=$db user=$user password=$pass sslmode=verify-full options='-c ssl_min_protocol_version=TLSv1.2'";
+// Conexão com sslmode=verify-full e certificados do sistema
+$connString = "host=$host port=$port dbname=$db user=$user password=$pass sslmode=verify-full sslrootcert=/etc/ssl/certs/ca-certificates.crt";
 $conn = pg_connect($connString);
 
 if ($conn) {
-    echo "<h1>🏀 Conexão estabelecida com PostgreSQL 18 (Opção C)!</h1>";
+    echo "<h1>🏀 Projeto da cesta de basquete está no ar!</h1>";
+
+    // Inserção de dados via POST
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $nome   = $_POST['nome'] ?? '';
+        $pontos = $_POST['pontos'] ?? 0;
+
+        if (!empty($nome)) {
+            $result = pg_query_params(
+                $conn,
+                "INSERT INTO registros_partida (nome_jogador, pontos) VALUES ($1, $2)",
+                [$nome, $pontos]
+            );
+            echo $result ? "✅ Dados registrados com sucesso!<br>" : "❌ Erro ao registrar dados.<br>";
+        } else {
+            echo "❌ Nome vazio. Dados não registrados.<br>";
+        }
+    }
+
+    // Mostrar ranking
+    $result = pg_query($conn, "SELECT * FROM registros_partida ORDER BY pontos DESC");
+    echo "<h2>📊 Ranking de jogadores</h2>
+          <table border='1' cellpadding='5'>
+          <tr><th>Posição</th><th>Jogador</th><th>Pontos</th><th>Data</th></tr>";
+
+    $posicao = 1;
+    while ($row = pg_fetch_assoc($result)) {
+        echo "<tr>
+                <td>{$posicao}</td>
+                <td>{$row['nome_jogador']}</td>
+                <td>{$row['pontos']}</td>
+                <td>{$row['data_registro']}</td>
+              </tr>";
+        $posicao++;
+    }
+    echo "</table>";
+
 } else {
-    echo "❌ Erro ao conectar (Opção C).";
+    echo "<strong>❌ Erro ao conectar ao banco:</strong><br>";
+    echo "Não foi possível estabelecer conexão com sslmode=verify-full.";
 }
 ?>
