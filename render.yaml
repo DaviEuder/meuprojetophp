@@ -18,8 +18,10 @@ services:
     name: meuprojetophp-web
     plan: free
     # ESTA LINHA É CRUCIAL: Diz ao Render para usar a URL do seu repositório atual
+# ... (dentro do bloco do serviço web)
     repo: '{{.RepositoryURL}}' 
     branch: main
+  # ...
     runtime: docker
     
     # Comando de inicialização
@@ -38,3 +40,4 @@ services:
       
       - key: APP_ENV
         value: production
+
