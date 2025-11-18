@@ -10,7 +10,8 @@ $dsn = "pgsql:host=$host;port=$port;dbname=$db;sslmode=require";
 
 try {
     $pdo = new PDO($dsn, $user, $pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
     ]);
 
     // Se recebeu dados via POST, insere no banco
@@ -35,11 +36,11 @@ try {
 
     // Mostrar ranking
     $stmt = $pdo->query("SELECT * FROM registros_partida ORDER BY pontos DESC");
-    echo "<h2>📊 Ranking de jogadores</h2><table border='1' cellpadding='5'><tr><th>Posição</th><th>Jogador</th><th>Pontos</th></tr>";
+    echo "<h2>📊 Ranking de jogadores</h2><table border='1' cellpadding='5'><tr><th>Posição</th><th>Jogador</th><th>Pontos</th><th>Data</th></tr>";
 
     $posicao = 1;
     while ($row = $stmt->fetch()) {
-        echo "<tr><td>{$posicao}</td><td>{$row['nome_jogador']}</td><td>{$row['pontos']}</td></tr>";
+        echo "<tr><td>{$posicao}</td><td>{$row['nome_jogador']}</td><td>{$row['pontos']}</td><td>{$row['data_registro']}</td></tr>";
         $posicao++;
     }
 
