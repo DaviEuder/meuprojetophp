@@ -5,7 +5,8 @@ $user = 'meuprojetodb_user';
 $pass = 'ARG3AoSXIauNk31ENsEeaMd4hJVZE0pz';
 $port = '5432';
 
-// DSN com SSL obrigatório (sem sslrootcert, usando bundle padrão do container)
+// DSN com SSL obrigatório
+// Usando verify-full para validar certificado contra bundle do container
 $dsn = "pgsql:host=$host;port=$port;dbname=$db;sslmode=verify-full";
 
 try {
@@ -59,4 +60,3 @@ try {
     echo "Erro ao conectar ou consultar o banco: " . $e->getMessage();
 }
 ?>
-
