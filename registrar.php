@@ -1,38 +1,38 @@
 <?php
-$host = "dpg-d4d5scali9vc73cbpd50-a.oregon-postgres.render.com";
-$port = 5432;
-$dbname = "meuprojetodb";
-$user = "meuprojetodb_user";
-$password = "ARG3AoSXIauNk3lENsEeaMd4hJVZEOpz";
+
+$databaseUrl = getenv("DATABASE_URL");
+
+if (!$databaseUrl) {
+    die("Erro: DATABASE_URL não encontrada.");
+}
+
+$dsn = str_replace("postgres://", "pgsql:", $databaseUrl);
 
 try {
-    $pdo = new PDO(
-        "pgsql:host=$host;port=$port;dbname=$dbname;sslmode=require",
-        $user,
-        $password,
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-    );
+    $conn = new PDO($dsn, null, null, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+    ]);
 
-    $nome = trim($_POST["nome"] ?? "");
-    $pontos = (int) ($_POST["pontos"] ?? 0);
+    $nome = trim($_POST['nome'] ?? '');
+    $pontos = (int)($_POST['pontos'] ?? 0);
 
-    if ($nome === "") {
-        echo "Erro: nome vazio.";
+    if ($nome === '' || $pontos < 0) {
+        echo "Erro: dados inválidos.";
         exit;
     }
 
-    $stmt = $pdo->prepare("
+    $stmt = $conn->prepare("
         INSERT INTO registros_partida (nome_jogador, pontos)
         VALUES (:nome, :pontos)
     ");
 
-    $stmt->execute([
-        ":nome" => $nome,
-        ":pontos" => $pontos
-    ]);
+    $stmt->bindParam(":nome", $nome);
+    $stmt->bindParam(":pontos", $pontos, PDO::PARAM_INT);
+    $stmt->execute();
 
     echo "OK";
 
 } catch (PDOException $e) {
-    echo "Erro ao inserir no banco: " . htmlspecialchars($e->getMessage());
+    error_log("Erro ao inserir: " . $e->getMessage());
+    echo "Erro no servidor.";
 }
