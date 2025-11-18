@@ -17,7 +17,8 @@ services:
   - type: web
     name: meuprojetophp-web
     plan: free
-    repo: '{{.RepositoryURL}}'
+    # ESTA LINHA É CRUCIAL: Diz ao Render para usar a URL do seu repositório atual
+    repo: '{{.RepositoryURL}}' 
     branch: main
     runtime: docker
     
@@ -29,7 +30,7 @@ services:
     
     # Variáveis de Ambiente
     envVars:
-      # ESSA É A PARTE MAIS IMPORTANTE: Vínculo Secreto (Secret Reference)
+      # Vínculo Secreto (Secret Reference)
       - key: DATABASE_URL
         fromDatabase:
           name: meuprojetophp-db
