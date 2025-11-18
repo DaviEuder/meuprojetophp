@@ -1,47 +1,47 @@
 <?php
-// Configuração do banco
-$host = "dpg-d4d5scali9vc73cbpd50-a.oregon-postgres.render.com";
-$db   = "meuprojetodb";
-$user = "meuprojetodb_user";
-$pass = "ARG3AoSXIauNk3lENsEeaMd4hJVZEOpz";
-$port = 5432;
 
-// DSN seguro: SSL é obrigatório na Render
-$dsn = "pgsql:host=$host;port=$port;dbname=$db;sslmode=require";
+// Tenta obter a variável DATABASE_URL do ambiente
+$databaseUrl = getenv("DATABASE_URL");
+
+if (!$databaseUrl) {
+    die("<h1>❌ Variável DATABASE_URL não encontrada</h1>");
+}
+
+// Converte postgres:// para pgsql:
+$dsn = str_replace("postgres://", "pgsql:", $databaseUrl);
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, [
+    $pdo = new PDO($dsn, null, null, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
     ]);
 } catch (PDOException $e) {
-    die("<h1>❌ Erro ao conectar ao banco</h1><pre>" . htmlspecialchars($e->getMessage()) . "</pre>");
+    error_log("Erro de conexão: " . $e->getMessage());
+    die("<h1>❌ Erro ao conectar ao banco</h1><p>Tente novamente mais tarde.</p>");
 }
 
 echo "<h1>🏀 Projeto da cesta de basquete está no ar!</h1>";
 
 // --- Registrar jogador ---
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $nome = trim($_POST["nome"] ?? "");
-    $pontos = (int) ($_POST["pontos"] ?? 0);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    if ($nome === "") {
-        echo "❌ Nome vazio. Dados não registrados.<br>";
+    $nome = trim($_POST['nome'] ?? '');
+    $pontos = (int)($_POST['pontos'] ?? 0);
+
+    if ($nome === '' || $pontos < 0) {
+        echo "❌ Dados inválidos.<br>";
     } else {
         $stmt = $pdo->prepare("
             INSERT INTO registros_partida (nome_jogador, pontos)
             VALUES (:nome, :pontos)
         ");
-
-        $stmt->execute([
-            ":nome" => $nome,
-            ":pontos" => $pontos
-        ]);
+        $stmt->execute([':nome' => $nome, ':pontos' => $pontos]);
 
         echo "✅ Dados registrados com sucesso!<br>";
     }
 }
-?>
 
+// --- Formulário ---
+?>
 <h2>Registrar jogador</h2>
 <form method="POST">
     <input name="nome" placeholder="Nome do jogador" required>
@@ -50,14 +50,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 </form>
 
 <h2>📊 Ranking de jogadores</h2>
-
 <table border="1" cellpadding="5">
-    <tr>
-        <th>Posição</th>
-        <th>Jogador</th>
-        <th>Pontos</th>
-        <th>Data</th>
-    </tr>
+<tr><th>Posição</th><th>Jogador</th><th>Pontos</th><th>Data</th></tr>
 
 <?php
 $stmt = $pdo->query("
@@ -66,17 +60,16 @@ $stmt = $pdo->query("
     ORDER BY pontos DESC, data_registro ASC
 ");
 
-$pos = 1;
+$posicao = 1;
 
 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     echo "<tr>
-            <td>{$pos}</td>
+            <td>{$posicao}</td>
             <td>" . htmlspecialchars($row['nome_jogador']) . "</td>
             <td>" . htmlspecialchars($row['pontos']) . "</td>
             <td>" . htmlspecialchars($row['data_registro']) . "</td>
-          </tr>";
-    $pos++;
+         </tr>";
+    $posicao++;
 }
 ?>
-
 </table>
