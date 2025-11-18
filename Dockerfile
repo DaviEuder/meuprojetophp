@@ -1,30 +1,26 @@
-# =============================
-# Dockerfile otimizado para Render + PHP + PostgreSQL
-# Inclui prevenção de cache, SSL, pdo_pgsql e dev server
-# =============================
+# Força rebuild e evita cache da camada base
+FROM php:8.2.29-cli
 
-# Mudança simples para INVALIDAR CACHE
-FROM php:8.2-cli AS base
+# Variável para quebrar cache quando precisar
+ARG CACHE_BUSTER=1
 
-# Instalar dependências essenciais
+# Instala dependências necessárias para PostgreSQL e SSL
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     openssl \
     ca-certificates \
+    && update-ca-certificates \
     && docker-php-ext-configure pdo_pgsql \
     && docker-php-ext-install pdo pdo_pgsql
 
-# Reforçar atualização de certificados SSL
-RUN update-ca-certificates
-
-# Diretório da aplicação
+# Garante que o container trabalha com diretório correto
 WORKDIR /app
 
-# Copia tudo
+# Copia todos os arquivos do projeto
 COPY . .
 
-# Expor a porta do servidor PHP
+# Render usa porta 10000
 EXPOSE 10000
 
-# Comando padrão para rodar no Render
+# Executa o PHP embutido como servidor
 CMD ["php", "-d", "variables_order=EGPCS", "-S", "0.0.0.0:10000", "-t", "."]
