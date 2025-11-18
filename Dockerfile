@@ -1,26 +1,32 @@
-# Força rebuild e evita cache da camada base
+# Usa a imagem base CLI (Command Line Interface), que é mais simples
+# e funciona melhor com o Development Server no plano gratuito.
 FROM php:8.2.29-cli
 
-# Variável para quebrar cache quando precisar
+# Variavel para quebrar o cache, se necessario
 ARG CACHE_BUSTER=1
 
-# Instala dependências necessárias para PostgreSQL e SSL
+# Instala as dependencias necessarias para PostgreSQL (libpq-dev) e SSL
+# O comando "docker-php-ext-install" sera usado logo apos a instalacao
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     openssl \
     ca-certificates \
-    && update-ca-certificates \
-    && docker-php-ext-configure pdo_pgsql \
-    && docker-php-ext-install pdo pdo_pgsql
+    && update-ca-certificates
 
-# Garante que o container trabalha com diretório correto
+# ⚠️ AQUI ESTA A CORREÇÃO:
+# Garante que as extensoes PDO e pdo_pgsql sejam instaladas e ativadas
+# para que o PHP Server possa encontra-las.
+RUN docker-php-ext-install pdo pdo_pgsql
+
+# Configura o diretorio de trabalho
 WORKDIR /app
 
-# Copia todos os arquivos do projeto
-COPY . .
+# Copia todos os arquivos do projeto para o container
+COPY . /app
 
-# Render usa porta 10000
+# Define o comando para iniciar o PHP Development Server
+# Este e o "carro-chefe" no plano gratuito, usando a porta 10000 do Render.
+CMD ["php", "-S", "0.0.0.0:10000", "-t", "/app"] 
+
+# Render usa a porta 10000
 EXPOSE 10000
-
-# Executa o PHP embutido como servidor
-CMD ["php", "-d", "variables_order=EGPCS", "-S", "0.0.0.0:10000", "-t", "."]
