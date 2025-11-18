@@ -1,117 +1,83 @@
 <?php
-// ======================================================================
+
+// index.php - Código PHP de Conexão com Debugging
+
+// ----------------------------------------------------
 // CONEXÃO COM O BANCO DE DADOS (USANDO A VARIAVEL DE AMBIENTE DO RENDER)
-// ======================================================================
+// ----------------------------------------------------
+
+date_default_timezone_set('America/Sao_Paulo');
+
 $databaseUrl = getenv("DATABASE_URL");
+$db = null;
 
+// 1. Verifica se a variável de ambiente existe (O problema original!)
 if (!$databaseUrl) {
-    die("Erro: Variavel de ambiente DATABASE_URL nao encontrada. Nao e possivel exibir o placar.");
-}
-
-$dsn = str_replace("postgres://", "pgsql:", $databaseUrl);
-
-try {
-     $pdo = new PDO($dsn, null, null, [
-         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-     ]);
-} catch (\PDOException $e) {
-     die("Nao foi possivel conectar ao banco de dados para exibir o placar: " . $e->getMessage()); 
-}
-// ----------------------------------------------------------------------
-
-
-// CONSULTA SQL: Seleciona nome e pontos, ordenando pela maior pontuacao (pontos)
-try {
-    // Agrupamos por nome para somar as pontuacoes se o jogador for registrado varias vezes.
-    // Se voce quer ver cada partida individualmente, remova o GROUP BY e SUM.
-    $stmt = $pdo->query("
-        SELECT nome_jogador, SUM(pontos) AS pontuacao_total
-        FROM registros_partida 
-        GROUP BY nome_jogador
-        ORDER BY pontuacao_total DESC
+    die("
+        <h1>Erro Crítico de Configuração!</h1>
+        <p>A variável de ambiente <code>DATABASE_URL</code> não foi encontrada.</p>
+        <p><strong>Ação Necessária:</strong> Verifique se o seu arquivo <code>render.yaml</code> está configurado corretamente para vincular o serviço de banco de dados (Secret Reference) ao Web Service.</p>
     ");
-    $pontuacoes = $stmt->fetchAll();
-} catch (PDOException $e) {
-    $pontuacoes = [];
-    $erro_sql = "Erro ao buscar dados: " . $e->getMessage();
 }
+
+// 2. Adapta a URL do PostgreSQL para o formato DSN do PDO (pgsql:...)
+// Render usa 'postgres://', PHP PDO espera 'pgsql:'
+$dsn = str_replace('postgres://', 'pgsql:', $databaseUrl);
+
+// 3. Tenta estabelecer a conexão
+try {
+    // Cria a conexão PDO
+    $db = new PDO($dsn);
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    // ----------------------------------------------------
+    // LÓGICA DO SEU APP: CRIAR TABELA E EXIBIR PLACAR
+    // ----------------------------------------------------
+
+    // Criar tabela se não existir
+    $db->exec("
+        CREATE TABLE IF NOT EXISTS placar (
+            id SERIAL PRIMARY KEY,
+            nome VARCHAR(50) NOT NULL,
+            pontuacao INT NOT NULL DEFAULT 0,
+            criado_em TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+    ");
+
+    // Inserir uma pontuação fictícia para teste
+    $nome = "Teste_" . substr(md5(mt_rand()), 0, 5);
+    $pontuacao = mt_rand(100, 1000);
+    $stmt = $db->prepare("INSERT INTO placar (nome, pontuacao) VALUES (:nome, :pontuacao)");
+    $stmt->execute([':nome' => $nome, ':pontuacao' => $pontuacao]);
+
+
+    // Buscar e exibir o placar
+    $placar = $db->query("SELECT nome, pontuacao FROM placar ORDER BY pontuacao DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
+
+    echo "
+        <h1>Conexão com o Banco de Dados OK!</h1>
+        <p>Tudo configurado! O Blueprint vinculou o DB, o Docker instalou o <code>pdo_pgsql</code>, e o PHP conectou.</p>
+        <h2>Placar (Exemplo)</h2>
+        <table border='1' cellpadding='10'>
+            <tr><th>Nome</th><th>Pontuação</th></tr>
+    ";
+
+    foreach ($placar as $registro) {
+        echo "<tr><td>" . htmlspecialchars($registro['nome']) . "</td><td>" . htmlspecialchars($registro['pontuacao']) . "</td></tr>";
+    }
+
+    echo "</table>";
+
+
+} catch (PDOException $e) {
+    // 4. Captura e exibe erros de conexão ou SQL
+    die("
+        <h1>Erro de Conexão com o Banco de Dados!</h1>
+        <p>O <code>DATABASE_URL</code> foi encontrado, mas a conexão falhou. Isso pode ser erro de senha/usuário/firewall.</p>
+        <p><strong>Erro:</strong> " . $e->getMessage() . "</p>
+    ");
+}
+
+$db = null;
 
 ?>
-
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Placar de Basquete - Visualizacao</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #e6e9f0; color: #333; }
-        .container { max-width: 900px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); }
-        h1 { color: #007bff; text-align: center; margin-bottom: 25px; border-bottom: 3px solid #007bff; padding-bottom: 10px; }
-        table { 
-            width: 100%; 
-            border-collapse: separate; 
-            border-spacing: 0;
-            margin-top: 20px; 
-            overflow: hidden;
-            border-radius: 10px;
-        }
-        th, td { 
-            padding: 15px; 
-            text-align: left; 
-        }
-        th { 
-            background-color: #007bff; 
-            color: white; 
-            font-weight: 600;
-        }
-        tr:nth-child(even) { 
-            background-color: #f8f8f8; 
-        }
-        tr:hover {
-            background-color: #e0f7fa;
-            transition: background-color 0.3s;
-        }
-        td:nth-child(3) { font-weight: bold; color: #d9534f; } /* Destaca a pontuacao */
-        .posicao-ouro { background-color: #ffcc00; font-weight: bold; color: #333 !important; }
-        .vazio, .erro { text-align: center; padding: 20px; border: 1px solid #ffdddd; background-color: #fff0f0; border-radius: 8px; color: #d9534f; }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-        <h1>🏀 Placar da Partida de Basquete</h1>
-
-        <?php if (isset($erro_sql)): ?>
-            <p class="erro">⚠️ <?php echo htmlspecialchars($erro_sql); ?></p>
-        <?php elseif (count($pontuacoes) > 0): ?>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Posição</th>
-                        <th>Nome do Jogador</th>
-                        <th>Pontuação Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php 
-                    $posicao = 1;
-                    foreach ($pontuacoes as $linha): 
-                        $classe_posicao = ($posicao == 1) ? 'posicao-ouro' : '';
-                    ?>
-                        <tr class="<?php echo $classe_posicao; ?>">
-                            <td><?php echo $posicao++; ?></td>
-                            <td><?php echo htmlspecialchars($linha['nome_jogador']); ?></td>
-                            <td><?php echo htmlspecialchars($linha['pontuacao_total']); ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php else: ?>
-            <p class="vazio">Ainda não há pontuações registradas no banco de dados. Envie dados pelo script Python primeiro.</p>
-        <?php endif; ?>
-    </div>
-
-</body>
-</html>
