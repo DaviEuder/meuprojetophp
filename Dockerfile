@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
     openssl \
     ca-certificates \
     && update-ca-certificates \
-    && docker-php-ext-install pgsql
+    && docker-php-ext-install pgsql pdo pdo_pgsql
 
 RUN a2enmod rewrite
 
