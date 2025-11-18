@@ -15,8 +15,7 @@ try {
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
     ]);
 } catch (PDOException $e) {
-    error_log("Erro de conexão: " . $e->getMessage());
-    die("<h1>❌ Erro ao conectar ao banco</h1><p>Tente novamente mais tarde.</p>");
+    die("<h1>❌ Erro ao conectar ao banco</h1><pre>" . $e->getMessage() . "</pre>");
 }
 
 echo "<h1>🏀 Projeto da cesta de basquete está no ar!</h1>";
@@ -73,3 +72,4 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 }
 ?>
 </table>
+
