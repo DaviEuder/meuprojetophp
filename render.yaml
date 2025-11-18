@@ -10,4 +10,4 @@ services:
           name: meuprojetodb
           property: connectionString
     buildCommand: ""
-    startCommand: "php -S 0.0.0.0:10000 -t public"
+    startCommand: "php -S 0.0.0.0:10000 index.php"
