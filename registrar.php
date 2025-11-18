@@ -1,37 +1,38 @@
 <?php
 $host = "dpg-d4d5scali9vc73cbpd50-a.oregon-postgres.render.com";
-$port = "5432";
+$port = 5432;
 $dbname = "meuprojetodb";
 $user = "meuprojetodb_user";
 $password = "ARG3AoSXIauNk3lENsEeaMd4hJVZEOpz";
 
 try {
-    $conn = new PDO(
+    $pdo = new PDO(
         "pgsql:host=$host;port=$port;dbname=$dbname;sslmode=require",
         $user,
-        $password
+        $password,
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
 
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $nome = trim($_POST["nome"] ?? "");
+    $pontos = (int) ($_POST["pontos"] ?? 0);
 
-    $nome = $_POST['nome'] ?? '';
-    $pontos = $_POST['pontos'] ?? 0;
-
-    if (empty($nome)) {
+    if ($nome === "") {
         echo "Erro: nome vazio.";
         exit;
     }
 
-    $sql = "INSERT INTO registros_partida (nome_jogador, pontos)
-            VALUES (:nome, :pontos)";
-    
-    $stmt = $conn->prepare($sql);
-    $stmt->bindParam(":nome", $nome);
-    $stmt->bindParam(":pontos", $pontos, PDO::PARAM_INT);
-    $stmt->execute();
+    $stmt = $pdo->prepare("
+        INSERT INTO registros_partida (nome_jogador, pontos)
+        VALUES (:nome, :pontos)
+    ");
+
+    $stmt->execute([
+        ":nome" => $nome,
+        ":pontos" => $pontos
+    ]);
 
     echo "OK";
 
 } catch (PDOException $e) {
-    echo "Erro ao inserir no banco: " . $e->getMessage();
+    echo "Erro ao inserir no banco: " . htmlspecialchars($e->getMessage());
 }
