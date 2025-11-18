@@ -5,9 +5,8 @@ $user = 'meuprojetodb_user';
 $pass = 'ARG3AoSXIauNk31ENsEeaMd4hJVZE0pz';
 $port = '5432';
 
-// DSN ajustado para usar SSL sem exigir root.crt
-// "prefer" tenta SSL mas não derruba se não conseguir negociar
-$dsn = "pgsql:host=$host;port=$port;dbname=$db;sslmode=prefer";
+// DSN com SSL obrigatório, sem validação extra
+$dsn = "pgsql:host=$host;port=$port;dbname=$db;sslmode=require";
 
 try {
     $pdo = new PDO($dsn, $user, $pass, [
@@ -15,46 +14,9 @@ try {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
     ]);
 
-    echo "<h1>🏀 Projeto da cesta de basquete está no ar!</h1>";
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $nome = $_POST['nome'] ?? '';
-        $pontos = $_POST['pontos'] ?? 0;
-
-        if (!empty($nome)) {
-            $stmt = $pdo->prepare(
-                "INSERT INTO registros_partida (nome_jogador, pontos) VALUES (:nome, :pontos)"
-            );
-            $stmt->execute([
-                ':nome' => $nome,
-                ':pontos' => $pontos
-            ]);
-            echo "✅ Dados registrados com sucesso!<br>";
-        } else {
-            echo "❌ Nome vazio. Dados não registrados.<br>";
-        }
-    }
-
-    $stmt = $pdo->query("SELECT * FROM registros_partida ORDER BY pontos DESC");
-    echo "<h2>📊 Ranking de jogadores</h2>
-          <table border='1' cellpadding='5'>
-          <tr><th>Posição</th><th>Jogador</th><th>Pontos</th><th>Data</th></tr>";
-
-    $posicao = 1;
-    while ($row = $stmt->fetch()) {
-        echo "<tr>
-                <td>{$posicao}</td>
-                <td>{$row['nome_jogador']}</td>
-                <td>{$row['pontos']}</td>
-                <td>{$row['data_registro']}</td>
-              </tr>";
-        $posicao++;
-    }
-
-    echo "</table>";
-
+    echo "<h1>✅ Conexão com PostgreSQL 18 estabelecida!</h1>";
 } catch (PDOException $e) {
-    echo "<strong>Erro ao conectar ou consultar o banco:</strong><br>";
+    echo "<strong>❌ Erro ao conectar:</strong><br>";
     echo nl2br($e->getMessage());
 }
 ?>
