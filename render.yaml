@@ -1,7 +1,7 @@
 services:
   - type: web
     name: meuprojetophp
-    env: docker
+    env: php
     plan: free
     autoDeploy: true
     envVars:
@@ -9,3 +9,5 @@ services:
         fromDatabase:
           name: meuprojetodb
           property: connectionString
+    buildCommand: ""
+    startCommand: "php -S 0.0.0.0:10000 -t public"
