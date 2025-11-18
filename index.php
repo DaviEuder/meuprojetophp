@@ -5,8 +5,9 @@ $user = 'meuprojetodb_user';
 $pass = 'ARG3AoSXIauNk31ENsEeaMd4hJVZE0pz';
 $port = '5432';
 
-// DSN com SSL obrigatório, sem validação extra
-$dsn = "pgsql:host=$host;port=$port;dbname=$db;sslmode=require";
+// DSN ajustado para usar SSL sem exigir root.crt
+// "prefer" tenta SSL mas não derruba se não conseguir negociar
+$dsn = "pgsql:host=$host;port=$port;dbname=$db;sslmode=prefer";
 
 try {
     $pdo = new PDO($dsn, $user, $pass, [
