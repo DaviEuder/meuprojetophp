@@ -5,6 +5,7 @@ $user = 'meuprojetodb_user';
 $pass = 'ARG3AoSXIauNk31ENsEeaMd4hJVZE0pz';
 $port = '5432';
 
+// DSN com SSL obrigatório
 $dsn = "pgsql:host=$host;port=$port;dbname=$db;sslmode=require";
 
 try {
