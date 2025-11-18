@@ -4,13 +4,8 @@ services:
     env: docker
     plan: free
     autoDeploy: true
-
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: meuprojetodb
           property: connectionString
-
-    ports:
-      - port: 10000
-        protocol: http
