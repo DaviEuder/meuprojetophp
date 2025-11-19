@@ -1,18 +1,9 @@
-version: services
-
-services:
-  # 1. Serviço de Banco de Dados PostgreSQL
-  - type: pserv
-    name: meuprojetophp-db
-    plan: free
-    databaseName: placar_db
-    user: placar_user
-
-  # 2. Serviço Web PHP (que usa o Dockerfile)
+# 2. Serviço Web PHP (que usa o Dockerfile)
   - type: web
     name: meuprojetophp-web
     plan: free
-    repo: '{{.RepositoryURL}}' 
+    # Substituído pelo link direto para evitar erro de parsing do template
+    repo: https://github.com/DaviEuder/meuprojetophp
     branch: main
     runtime: docker
     
