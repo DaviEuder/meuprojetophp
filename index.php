@@ -1,29 +1,59 @@
 <?php
-// index.php - Código PHP de Conexão e Exibição do Placar
+
+// ----------------------------------------------------
+// // FUNÇÃO DE CONEXÃO ROBUSTA
+// ----------------------------------------------------
+
+/**
+ * Conecta ao banco de dados PostgreSQL usando a variável de ambiente DATABASE_URL.
+ * Usa parse_url() para desmembrar a string de conexão do Render.
+ * @return PDO A instância da conexão PDO.
+ * @throws Exception Se a variável DATABASE_URL não estiver definida ou a conexão falhar.
+ */
+function connectDB() {
+    $databaseUrl = getenv('DATABASE_URL');
+
+    if (empty($databaseUrl)) {
+        throw new Exception("DATABASE_URL não está definida.");
+    }
+
+    // 1. Desmembra a URL de conexão fornecida pelo Render.
+    $url = parse_url($databaseUrl);
+
+    // 2. Extrai cada componente
+    $host = $url['host'];
+    $port = $url['port'] ?? 5432;
+    $user = $url['user'];
+    $password = $url['pass'];
+    $dbname = ltrim($url['path'], '/');
+
+    // 3. Constrói o DSN no formato exato que o PDO espera
+    $dsn = "pgsql:host=$host;port=$port;dbname=$dbname";
+
+    // 4. Tenta conectar
+    $db = new PDO($dsn, $user, $password); // Passa user e password explicitamente
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    return $db;
+}
+
+// ----------------------------------------------------
+// // INÍCIO DA APLICAÇÃO
+// ----------------------------------------------------
 
 date_default_timezone_set('America/Sao_Paulo');
 
-$databaseUrl = getenv("DATABASE_URL");
 $db = null;
 
-// Verifica a variável de ambiente (Resolve o erro principal do Render)
-if (!$databaseUrl) {
-    die("
-        <h1>Erro Crítico de Configuração!</h1>
-        <p>A variável de ambiente <code>DATABASE_URL</code> não foi encontrada.</p>
-        <p><strong>Ação Necessária:</strong> Verifique se o seu arquivo <code>render.yaml</code> está configurado corretamente para vincular o serviço de banco de dados (Secret Reference) ao Web Service.</p>
-    ");
-}
-
-// Adapta a URL do PostgreSQL para o formato DSN do PDO (pgsql:...)
-$dsn = str_replace('postgres://', 'pgsql:', $databaseUrl);
-
 try {
-    // Tenta estabelecer a conexão
-    $db = new PDO($dsn);
-    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // Tenta estabelecer a conexão usando a função robusta
+    $db = connectDB(); 
 
-    // CRIAÇÃO DA TABELA (Com a estrutura CORRETA: registros_partida)
+    // ----------------------------------------------------
+    // // CRIAÇÃO DA TABELA (COM A ESTRUTURA CORRETA)
+    // ----------------------------------------------------
+    
+    // A tabela deve ser 'registros_partida' com colunas 'nome_jogador' e 'pontos'
     $db->exec("
         CREATE TABLE IF NOT EXISTS registros_partida (
             id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -33,7 +63,9 @@ try {
         );
     ");
 
-    // LÓGICA DO SEU APP: INSERIR DADOS (APENAS PARA TESTE) E EXIBIR
+    // ----------------------------------------------------
+    // // LÓGICA DO SEU APP: INSERIR DADOS (APENAS PARA TESTE) E EXIBIR
+    // ----------------------------------------------------
 
     // Exemplo: Inserir uma pontuação fictícia para teste na tabela correta
     $nome = "Teste_" . substr(md5(mt_rand()), 0, 5);
@@ -61,7 +93,7 @@ try {
     echo "</table>";
 
 
-} catch (PDOException $e) {
+} catch (Exception $e) { // Captura Exception, que inclui PDOException
     // Captura e exibe erros de conexão ou SQL
     die("
         <h1>Erro de Conexão com o Banco de Dados!</h1>
@@ -72,4 +104,5 @@ try {
 }
 
 $db = null;
+
 ?>
