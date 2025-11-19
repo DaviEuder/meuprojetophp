@@ -5,8 +5,9 @@ services:
   - type: pserv
     name: meuprojetophp-db
     plan: free
-    databaseName: placar_db
-    user: placar_user
+    spec: # <-- ESTA LINHA É CRÍTICA PARA O RENDER DB
+      databaseName: placar_db
+      user: placar_user
 
   # 2. Serviço Web PHP (que usa o Dockerfile)
   - type: web
@@ -15,12 +16,16 @@ services:
     repo: https://github.com/DaviEuder/meuprojetophp
     branch: main
     runtime: docker
-    startCommand: 'php -S 0.0.0.0:10000 -t /app'
-    port: 10000
-    envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: meuprojetophp-db
-          property: connectionString
-      - key: APP_ENV
-        value: production
+    
+    spec: # <-- ESTA LINHA É CRÍTICA PARA O RENDER WEB
+      startCommand: 'php -S 0.0.0.0:10000 -t /app'
+      port: 10000
+      
+      envVars:
+        - key: DATABASE_URL
+          fromDatabase:
+            name: meuprojetophp-db
+            property: connectionString
+        
+        - key: APP_ENV
+          value: production
