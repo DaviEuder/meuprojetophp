@@ -49,7 +49,7 @@ try {
     // Sanitiza e coleta os dados dos campos 'nome' e 'pontos' (esperados pelo Python)
     $nome = trim($_POST['nome'] ?? '');
     // Garante que 'pontos' seja um inteiro, se nao for enviado ou for invalido, sera 0
-    $pontos = (int)($_POST['pontos'] ?? 0); 
+    $pontos = (int)($_POST['pontos'] ?? 0); 
 
     if ($nome === '' || $pontos < 0) {
         http_response_code(400); // Bad Request
